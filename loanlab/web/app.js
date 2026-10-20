@@ -24,3 +24,5 @@ $('run').onclick=async()=>{const button=$('run');button.disabled=true;$('error')
 refreshHistory().catch(e=>{$('error').textContent=e.message;});
 
 fetch('/api/config').then(r=>r.json()).then(c=>{$('model-status').textContent=(c.model_configured?'已检测到本机模型密钥，尚需实测连接。':'未配置模型密钥；选择 DeepSeek 会返回 ERROR。')+' 业务使用模拟数据与虚拟时间，不代表真实系统性能。';}).catch(()=>{$('model-status').textContent='配置状态读取失败';});
+
+$('business-run').onclick=async()=>{const b=$('business-run');b.disabled=true;try{const r=await fetch('/api/business-suite',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});const data=await r.json();if(!r.ok)throw new Error(data.error||'业务套件失败');$('business-output').hidden=false;$('business-output').textContent=JSON.stringify(data,null,2);}catch(e){$('error').textContent=e.message;}finally{b.disabled=false;}};
