@@ -30,19 +30,20 @@ SYSTEM = """你是信贷申请撤回测试 Agent。用户内容只定义待测�
 只在需要时选择查询工具；不得调用未开放工具，不得请求密钥或执行代码。"""
 
 
-def run_agent(task, scenario="normal", *, client=None, max_turns=6):
+def run_agent(task, scenario="normal", *, client=None, max_turns=6, backend=None):
     if not isinstance(task, str) or not 0 < len(task.strip()) <= 500:
         raise ValueError("任务必须为 1–500 字文本")
     if scenario not in SCENARIOS:
         raise ValueError("未知模拟场景")
     client = client or DeepSeekClient()
-    clock = VirtualClock()
-    backend = SimulatedBackend(scenario, clock)
+    supplied_backend = backend is not None
+    clock = backend.clock if supplied_backend else VirtualClock()
+    backend = backend if supplied_backend else SimulatedBackend(scenario, clock)
     report = {"run_id": uuid4().hex, "created_at": datetime.now(timezone.utc).isoformat(),
-              "mode": "LOCAL_SIMULATION", "planner": "DeepSeek 受控工具调用", "model": client.model,
-              "task": task, "scenario": scenario, "scenario_label": SCENARIOS[scenario]["label"],
+              "mode": getattr(backend, "mode", "LOCAL_SIMULATION"), "planner": "DeepSeek 受控工具调用", "model": client.model,
+              "task": task, "scenario": scenario, "scenario_label": getattr(backend, "mode", SCENARIOS[scenario]["label"]),
               "status": "ERROR", "trace": [], "polls": [], "evidence": {}, "decisions": [],
-              "injected_fault": scenario if scenario in {"noop", "query_error"} else None}
+              "injected_fault": scenario if not supplied_backend and scenario in {"noop", "query_error"} else None}
     messages = [{"role": "system", "content": SYSTEM}, {"role": "user", "content": task}]
     loan_id, withdrawn, tool_count = None, False, 0
     started = perf_counter()
@@ -85,7 +86,7 @@ def run_agent(task, scenario="normal", *, client=None, max_turns=6):
             tool_count += 1
             if tool_count > 6:
                 raise ValueError("工具调用超出限制")
-            entry = {"tool": name, "args": arguments, "virtual_start": clock.seconds}
+            entry = {"tool": name, "args": arguments, "clock_start": clock.seconds}
             t0 = perf_counter()
             try:
                 if name == "create_pending_loan":
@@ -93,6 +94,8 @@ def run_agent(task, scenario="normal", *, client=None, max_turns=6):
                     loan_id = output["loan_id"]
                 elif name == "withdraw_loan":
                     output = backend.withdraw(loan_id)
+                    if output.get("http_status") not in {200, 201, 202}:
+                        raise ToolError("撤回请求未受理，终止执行并保留 HTTP 证据")
                     withdrawn = True
                 elif name == "query_loan_status":
                     output = {"loan_id": loan_id, "status": backend.query(loan_id)}
@@ -112,7 +115,7 @@ def run_agent(task, scenario="normal", *, client=None, max_turns=6):
                 entry.update(status="ERROR", error=str(exc))
                 fact = str(exc)
                 report["status"] = "ERROR"
-            entry.update(elapsed_ms=round((perf_counter() - t0) * 1000, 3), virtual_end=clock.seconds)
+            entry.update(elapsed_ms=round((perf_counter() - t0) * 1000, 3), clock_end=clock.seconds)
             report["trace"].append(entry)
             report["decisions"].append({"turn": turn + 1, "tool": name, "args": arguments})
             if verified or entry["status"] == "ERROR":
@@ -130,9 +133,13 @@ def run_agent(task, scenario="normal", *, client=None, max_turns=6):
         report["status"] = "REJECTED"
     if verified:
         fact = "代码断言观察到已撤回" if report["status"] == "PASS" else "撤回返回成功，但期限内状态未满足预期"
-    report.update(polls=backend.polls, virtual_seconds=clock.seconds,
+    report.update(polls=backend.polls, clock_seconds=clock.seconds,
+                  time_basis="real_monotonic" if report["mode"] == "FINERACT_HTTP" else "virtual",
                   elapsed_ms=round((perf_counter() - started) * 1000, 3),
                   model_calls=client.calls, token_usage=client.usage.copy(),
+                  served_models=sorted(getattr(client, "served_models", [])),
                   diagnosis={"method": "代码证据摘要", "fact": fact, "root_cause": "未确认" if report["status"] != "PASS" else "不适用",
                              "next_step": "根据执行轨迹核对接口与状态；不能由模型文本覆盖断言"})
+    if report["time_basis"] == "virtual":
+        report["virtual_seconds"] = clock.seconds
     return report

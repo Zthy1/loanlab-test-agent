@@ -17,6 +17,7 @@ class DeepSeekClient:
         self.transport = transport
         self.calls = 0
         self.usage = {"prompt_tokens": 0, "completion_tokens": 0}
+        self.served_models = set()
 
     def complete(self, messages, tools):
         if self.calls >= 6:
@@ -45,6 +46,8 @@ class DeepSeekClient:
             except (URLError, TimeoutError, OSError, ValueError):
                 raise ModelError("DeepSeek 连接、超时或响应解析失败") from None
         try:
+            if isinstance(data.get("model"), str):
+                self.served_models.add(data["model"])
             usage = data.get("usage", {})
             for key in self.usage:
                 self.usage[key] += int(usage.get(key, 0))

@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 
 from .engine import SCENARIOS, run_case
 from .agent import run_agent
+from .business import run_suite
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -37,6 +38,13 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/config":
             return self.send({"mode": "LOCAL_SIMULATION", "model_configured": bool(os.environ.get("DEEPSEEK_API_KEY")), "fineract_connected": False,
                               "scenarios": SCENARIOS})
+        if path.startswith("/api/evidence/"):
+            name = path.removeprefix("/api/evidence/")
+            if name in {"fineract-live", "comparison-live", "live-agent-live"}:
+                file = ROOT / "examples" / (name + ".json")
+                if file.is_file():
+                    return self.send(file.read_bytes())
+            return self.send({"error": "Not found"}, 404)
         if path == "/api/runs":
             items = []
             for file in sorted(REPORTS.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)[:30]:
@@ -51,7 +59,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send({"error": "Not found"}, 404)
 
     def do_POST(self):
-        if urlparse(self.path).path != "/api/run":
+        path = urlparse(self.path).path
+        if path not in {"/api/run", "/api/business-suite"}:
             return self.send({"error": "Not found"}, 404)
         origin = self.headers.get("Origin")
         allowed = {f"http://127.0.0.1:{self.server.server_port}", f"http://localhost:{self.server.server_port}"}
@@ -64,6 +73,10 @@ class Handler(BaseHTTPRequestHandler):
             if not 0 < length <= 4096:
                 raise ValueError("请求大小无效")
             data = json.loads(self.rfile.read(length))
+            if path == "/api/business-suite":
+                if data != {}:
+                    raise ValueError("业务套件不接受外部接口地址或凭据")
+                return self.send(run_suite())
             if not isinstance(data, dict) or set(data) - {"task", "scenario", "planner"}:
                 raise ValueError("请求字段无效")
             scenario = data.get("scenario", "normal")
