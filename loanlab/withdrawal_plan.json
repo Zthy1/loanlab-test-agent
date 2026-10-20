@@ -1,0 +1,9 @@
+{
+  "case_id": "LOAN-WITHDRAW-001",
+  "description": "创建独立的待审批贷款，撤回并检查最终状态",
+  "steps": [
+    {"tool": "create_pending_loan", "args": {}, "save_as": "loan_id"},
+    {"tool": "withdraw_loan", "args": {"loan_id": "$loan_id"}},
+    {"tool": "verify_withdrawn", "args": {"loan_id": "$loan_id"}}
+  ]
+}
