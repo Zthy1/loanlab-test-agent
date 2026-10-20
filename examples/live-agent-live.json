@@ -1,0 +1,183 @@
+{
+  "run_id": "aff22bac627e4fc1bb6bd1109bfd3d46",
+  "created_at": "2026-10-20T06:23:52.171118+00:00",
+  "mode": "FINERACT_HTTP",
+  "planner": "DeepSeek 受控工具调用",
+  "model": "deepseek-flash",
+  "task": "创建一笔待审批贷款，撤回申请并验证最终状态",
+  "scenario": "normal",
+  "scenario_label": "FINERACT_HTTP",
+  "status": "PASS",
+  "trace": [
+    {
+      "tool": "create_pending_loan",
+      "args": {},
+      "clock_start": 1.1869999999998981,
+      "status": "OK",
+      "output": {
+        "loan_id": 6,
+        "status": "SUBMITTED_AND_PENDING_APPROVAL"
+      },
+      "elapsed_ms": 156.765,
+      "clock_end": 1.3430000000007567
+    },
+    {
+      "tool": "withdraw_loan",
+      "args": {
+        "loan_id": 6
+      },
+      "clock_start": 2.2810000000008586,
+      "status": "OK",
+      "output": {
+        "http_status": 200,
+        "loan_id": 6
+      },
+      "elapsed_ms": 87.607,
+      "clock_end": 2.3590000000003783
+    },
+    {
+      "tool": "verify_withdrawn",
+      "args": {
+        "loan_id": 6
+      },
+      "clock_start": 3.2960000000002765,
+      "status": "OK",
+      "output": {
+        "loan_id": 6,
+        "expected": "WITHDRAWN_BY_CLIENT",
+        "actual": "WITHDRAWN_BY_CLIENT",
+        "passed": true
+      },
+      "elapsed_ms": 101.655,
+      "clock_end": 3.4060000000008586
+    }
+  ],
+  "polls": [
+    {
+      "second": 1.343,
+      "loan_id": 6,
+      "status": "SUBMITTED_AND_PENDING_APPROVAL"
+    },
+    {
+      "second": 3.406,
+      "loan_id": 6,
+      "status": "WITHDRAWN_BY_CLIENT"
+    }
+  ],
+  "evidence": {
+    "loan_id": 6,
+    "expected": "WITHDRAWN_BY_CLIENT",
+    "actual": "WITHDRAWN_BY_CLIENT",
+    "passed": true
+  },
+  "decisions": [
+    {
+      "turn": 1,
+      "tool": "create_pending_loan",
+      "args": {}
+    },
+    {
+      "turn": 2,
+      "tool": "withdraw_loan",
+      "args": {
+        "loan_id": 6
+      }
+    },
+    {
+      "turn": 3,
+      "tool": "verify_withdrawn",
+      "args": {
+        "loan_id": 6
+      }
+    }
+  ],
+  "injected_fault": null,
+  "clock_seconds": 3.4060000000008586,
+  "time_basis": "real_monotonic",
+  "elapsed_ms": 3272.085,
+  "model_calls": 3,
+  "token_usage": {
+    "prompt_tokens": 2055,
+    "completion_tokens": 133
+  },
+  "served_models": [
+    "deepseek-flash"
+  ],
+  "diagnosis": {
+    "method": "代码证据摘要",
+    "fact": "代码断言观察到已撤回",
+    "root_cause": "不适用",
+    "next_step": "根据执行轨迹核对接口与状态；不能由模型文本覆盖断言"
+  },
+  "cleanup": [
+    {
+      "kind": "loans",
+      "id": 6,
+      "cleanup": "RETAINED",
+      "http_status": 403
+    },
+    {
+      "kind": "loanproducts",
+      "id": 2,
+      "cleanup": "RETAINED",
+      "reason": "产品采用测试专用名称，保留供排查"
+    },
+    {
+      "kind": "clients",
+      "id": 2,
+      "cleanup": "RETAINED",
+      "http_status": 403
+    }
+  ],
+  "requests": [
+    {
+      "method": "POST",
+      "path": "/clients",
+      "status": 200,
+      "elapsed_ms": 78.0
+    },
+    {
+      "method": "POST",
+      "path": "/loanproducts",
+      "status": 200,
+      "elapsed_ms": 47.0
+    },
+    {
+      "method": "POST",
+      "path": "/loans",
+      "status": 200,
+      "elapsed_ms": 109.0
+    },
+    {
+      "method": "GET",
+      "path": "/loans/6",
+      "status": 200,
+      "elapsed_ms": 47.0
+    },
+    {
+      "method": "POST",
+      "path": "/loans/6?command=withdrawnByApplicant",
+      "status": 200,
+      "elapsed_ms": 78.0
+    },
+    {
+      "method": "GET",
+      "path": "/loans/6",
+      "status": 200,
+      "elapsed_ms": 110.0
+    },
+    {
+      "method": "DELETE",
+      "path": "/loans/6",
+      "status": 403,
+      "elapsed_ms": 62.0
+    },
+    {
+      "method": "DELETE",
+      "path": "/clients/2",
+      "status": 403,
+      "elapsed_ms": 63.0
+    }
+  ],
+  "fineract_image": "apache/fineract@sha256:04fb6907c8102e9e76097c514fb21d05390dd7e0e8a0e828ce86759ce61ed640"
+}

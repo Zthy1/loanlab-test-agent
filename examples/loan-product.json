@@ -1,0 +1,23 @@
+{
+  "name": "LoanLab template",
+  "shortName": "LLAB",
+  "description": "Isolated LoanLab regression fixture",
+  "currencyCode": "USD",
+  "digitsAfterDecimal": 2,
+  "inMultiplesOf": 1,
+  "principal": 5000,
+  "numberOfRepayments": 5,
+  "repaymentEvery": 1,
+  "repaymentFrequencyType": 2,
+  "interestRatePerPeriod": 0,
+  "interestRateFrequencyType": 2,
+  "amortizationType": 1,
+  "interestType": 0,
+  "interestCalculationPeriodType": 1,
+  "transactionProcessingStrategyCode": "mifos-standard-strategy",
+  "accountingRule": 1,
+  "daysInYearType": 365,
+  "daysInMonthType": 30,
+  "isInterestRecalculationEnabled": false,
+  "locale": "en"
+}

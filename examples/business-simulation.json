@@ -1,0 +1,175 @@
+{
+  "run_id": "65e38325f6cc416d97bd033dbcdd6725",
+  "backend": "BUSINESS_SIMULATION",
+  "cases": [
+    {
+      "name": "pending_withdrawal",
+      "status": "PASS",
+      "evidence": {
+        "loan_id": 1,
+        "before": "SUBMITTED_AND_PENDING_APPROVAL",
+        "response": {
+          "http_status": 200
+        },
+        "verification": {
+          "expected": "WITHDRAWN_BY_CLIENT",
+          "actual": "WITHDRAWN_BY_CLIENT",
+          "matched": true
+        }
+      },
+      "elapsed_ms": 0.01
+    },
+    {
+      "name": "approved_withdrawal_rejected",
+      "status": "PASS",
+      "evidence": {
+        "loan_id": 2,
+        "approval": {
+          "http_status": 200
+        },
+        "response": {
+          "http_status": 403
+        },
+        "after": "APPROVED"
+      },
+      "elapsed_ms": 0.01
+    },
+    {
+      "name": "repeated_withdrawal_rejected",
+      "status": "PASS",
+      "evidence": {
+        "loan_id": 3,
+        "first": {
+          "http_status": 200
+        },
+        "second": {
+          "http_status": 403
+        },
+        "after": "WITHDRAWN_BY_CLIENT"
+      },
+      "elapsed_ms": 0.01
+    },
+    {
+      "name": "loan_state_isolation",
+      "status": "PASS",
+      "evidence": {
+        "loan_a": 4,
+        "loan_b": 5,
+        "a": {
+          "expected": "WITHDRAWN_BY_CLIENT",
+          "actual": "WITHDRAWN_BY_CLIENT",
+          "matched": true
+        },
+        "b": "SUBMITTED_AND_PENDING_APPROVAL"
+      },
+      "elapsed_ms": 0.01
+    }
+  ],
+  "cleanup": [
+    {
+      "cleanup": "CLEARED",
+      "kind": "memory"
+    }
+  ],
+  "note": "资源守卫验证的是 Agent 边界，不等于服务端用户权限验证",
+  "requests": [],
+  "polls": [
+    {
+      "second": 0,
+      "loan_id": 1,
+      "status": "SUBMITTED_AND_PENDING_APPROVAL"
+    },
+    {
+      "second": 0,
+      "loan_id": 1,
+      "status": "SUBMITTED_AND_PENDING_APPROVAL"
+    },
+    {
+      "second": 0,
+      "loan_id": 1,
+      "status": "SUBMITTED_AND_PENDING_APPROVAL"
+    },
+    {
+      "second": 0,
+      "loan_id": 1,
+      "status": "WITHDRAWN_BY_CLIENT"
+    },
+    {
+      "second": 0,
+      "loan_id": 2,
+      "status": "SUBMITTED_AND_PENDING_APPROVAL"
+    },
+    {
+      "second": 0,
+      "loan_id": 2,
+      "status": "SUBMITTED_AND_PENDING_APPROVAL"
+    },
+    {
+      "second": 0,
+      "loan_id": 2,
+      "status": "APPROVED"
+    },
+    {
+      "second": 0,
+      "loan_id": 2,
+      "status": "APPROVED"
+    },
+    {
+      "second": 0,
+      "loan_id": 2,
+      "status": "APPROVED"
+    },
+    {
+      "second": 0,
+      "loan_id": 3,
+      "status": "SUBMITTED_AND_PENDING_APPROVAL"
+    },
+    {
+      "second": 0,
+      "loan_id": 3,
+      "status": "SUBMITTED_AND_PENDING_APPROVAL"
+    },
+    {
+      "second": 0,
+      "loan_id": 3,
+      "status": "WITHDRAWN_BY_CLIENT"
+    },
+    {
+      "second": 0,
+      "loan_id": 3,
+      "status": "WITHDRAWN_BY_CLIENT"
+    },
+    {
+      "second": 0,
+      "loan_id": 3,
+      "status": "WITHDRAWN_BY_CLIENT"
+    },
+    {
+      "second": 0,
+      "loan_id": 4,
+      "status": "SUBMITTED_AND_PENDING_APPROVAL"
+    },
+    {
+      "second": 0,
+      "loan_id": 5,
+      "status": "SUBMITTED_AND_PENDING_APPROVAL"
+    },
+    {
+      "second": 0,
+      "loan_id": 4,
+      "status": "SUBMITTED_AND_PENDING_APPROVAL"
+    },
+    {
+      "second": 0,
+      "loan_id": 4,
+      "status": "WITHDRAWN_BY_CLIENT"
+    },
+    {
+      "second": 0,
+      "loan_id": 5,
+      "status": "SUBMITTED_AND_PENDING_APPROVAL"
+    }
+  ],
+  "elapsed_ms": 0.06,
+  "status": "PASS"
+}

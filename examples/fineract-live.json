@@ -1,0 +1,385 @@
+{
+  "run_id": "7deab9b608c5411ba8b7d12921372b78",
+  "backend": "FINERACT_HTTP",
+  "cases": [
+    {
+      "name": "pending_withdrawal",
+      "status": "PASS",
+      "evidence": {
+        "loan_id": 1,
+        "before": "SUBMITTED_AND_PENDING_APPROVAL",
+        "response": {
+          "http_status": 200,
+          "loan_id": 1
+        },
+        "verification": {
+          "expected": "WITHDRAWN_BY_CLIENT",
+          "actual": "WITHDRAWN_BY_CLIENT",
+          "matched": true
+        }
+      },
+      "elapsed_ms": 870.59
+    },
+    {
+      "name": "approved_withdrawal_rejected",
+      "status": "PASS",
+      "evidence": {
+        "loan_id": 2,
+        "approval": {
+          "http_status": 200,
+          "loan_id": 2
+        },
+        "response": {
+          "http_status": 403,
+          "loan_id": 2
+        },
+        "after": "APPROVED"
+      },
+      "elapsed_ms": 768.66
+    },
+    {
+      "name": "repeated_withdrawal_rejected",
+      "status": "PASS",
+      "evidence": {
+        "loan_id": 3,
+        "first": {
+          "http_status": 200,
+          "loan_id": 3
+        },
+        "second": {
+          "http_status": 403,
+          "loan_id": 3
+        },
+        "after": "WITHDRAWN_BY_CLIENT"
+      },
+      "elapsed_ms": 451.05
+    },
+    {
+      "name": "loan_state_isolation",
+      "status": "PASS",
+      "evidence": {
+        "loan_a": 4,
+        "loan_b": 5,
+        "a": {
+          "expected": "WITHDRAWN_BY_CLIENT",
+          "actual": "WITHDRAWN_BY_CLIENT",
+          "matched": true
+        },
+        "b": "SUBMITTED_AND_PENDING_APPROVAL"
+      },
+      "elapsed_ms": 630.21
+    }
+  ],
+  "cleanup": [
+    {
+      "kind": "loans",
+      "id": 5,
+      "cleanup": "DELETED",
+      "http_status": 200
+    },
+    {
+      "kind": "loans",
+      "id": 4,
+      "cleanup": "RETAINED",
+      "http_status": 403
+    },
+    {
+      "kind": "loans",
+      "id": 3,
+      "cleanup": "RETAINED",
+      "http_status": 403
+    },
+    {
+      "kind": "loans",
+      "id": 2,
+      "cleanup": "RETAINED",
+      "http_status": 403
+    },
+    {
+      "kind": "loans",
+      "id": 1,
+      "cleanup": "RETAINED",
+      "http_status": 403
+    },
+    {
+      "kind": "loanproducts",
+      "id": 1,
+      "cleanup": "RETAINED",
+      "reason": "产品采用测试专用名称，保留供排查"
+    },
+    {
+      "kind": "clients",
+      "id": 1,
+      "cleanup": "RETAINED",
+      "http_status": 403
+    }
+  ],
+  "note": "资源守卫验证的是 Agent 边界，不等于服务端用户权限验证",
+  "requests": [
+    {
+      "method": "POST",
+      "path": "/clients",
+      "status": 200,
+      "elapsed_ms": 1937.0
+    },
+    {
+      "method": "POST",
+      "path": "/loanproducts",
+      "status": 200,
+      "elapsed_ms": 109.0
+    },
+    {
+      "method": "POST",
+      "path": "/loans",
+      "status": 200,
+      "elapsed_ms": 297.0
+    },
+    {
+      "method": "GET",
+      "path": "/loans/1",
+      "status": 200,
+      "elapsed_ms": 219.0
+    },
+    {
+      "method": "GET",
+      "path": "/loans/1",
+      "status": 200,
+      "elapsed_ms": 94.0
+    },
+    {
+      "method": "POST",
+      "path": "/loans/1?command=withdrawnByApplicant",
+      "status": 200,
+      "elapsed_ms": 125.0
+    },
+    {
+      "method": "GET",
+      "path": "/loans/1",
+      "status": 200,
+      "elapsed_ms": 140.0
+    },
+    {
+      "method": "POST",
+      "path": "/loans",
+      "status": 200,
+      "elapsed_ms": 141.0
+    },
+    {
+      "method": "GET",
+      "path": "/loans/2",
+      "status": 200,
+      "elapsed_ms": 109.0
+    },
+    {
+      "method": "POST",
+      "path": "/loans/2?command=approve",
+      "status": 200,
+      "elapsed_ms": 94.0
+    },
+    {
+      "method": "GET",
+      "path": "/loans/2",
+      "status": 200,
+      "elapsed_ms": 78.0
+    },
+    {
+      "method": "POST",
+      "path": "/loans/2?command=withdrawnByApplicant",
+      "status": 403,
+      "elapsed_ms": 188.0
+    },
+    {
+      "method": "GET",
+      "path": "/loans/2",
+      "status": 200,
+      "elapsed_ms": 156.0
+    },
+    {
+      "method": "POST",
+      "path": "/loans",
+      "status": 200,
+      "elapsed_ms": 125.0
+    },
+    {
+      "method": "GET",
+      "path": "/loans/3",
+      "status": 200,
+      "elapsed_ms": 47.0
+    },
+    {
+      "method": "POST",
+      "path": "/loans/3?command=withdrawnByApplicant",
+      "status": 200,
+      "elapsed_ms": 94.0
+    },
+    {
+      "method": "GET",
+      "path": "/loans/3",
+      "status": 200,
+      "elapsed_ms": 47.0
+    },
+    {
+      "method": "POST",
+      "path": "/loans/3?command=withdrawnByApplicant",
+      "status": 403,
+      "elapsed_ms": 78.0
+    },
+    {
+      "method": "GET",
+      "path": "/loans/3",
+      "status": 200,
+      "elapsed_ms": 62.0
+    },
+    {
+      "method": "POST",
+      "path": "/loans",
+      "status": 200,
+      "elapsed_ms": 141.0
+    },
+    {
+      "method": "GET",
+      "path": "/loans/4",
+      "status": 200,
+      "elapsed_ms": 78.0
+    },
+    {
+      "method": "POST",
+      "path": "/loans",
+      "status": 200,
+      "elapsed_ms": 141.0
+    },
+    {
+      "method": "GET",
+      "path": "/loans/5",
+      "status": 200,
+      "elapsed_ms": 62.0
+    },
+    {
+      "method": "POST",
+      "path": "/loans/4?command=withdrawnByApplicant",
+      "status": 200,
+      "elapsed_ms": 94.0
+    },
+    {
+      "method": "GET",
+      "path": "/loans/4",
+      "status": 200,
+      "elapsed_ms": 62.0
+    },
+    {
+      "method": "GET",
+      "path": "/loans/5",
+      "status": 200,
+      "elapsed_ms": 63.0
+    },
+    {
+      "method": "DELETE",
+      "path": "/loans/5",
+      "status": 200,
+      "elapsed_ms": 94.0
+    },
+    {
+      "method": "DELETE",
+      "path": "/loans/4",
+      "status": 403,
+      "elapsed_ms": 62.0
+    },
+    {
+      "method": "DELETE",
+      "path": "/loans/3",
+      "status": 403,
+      "elapsed_ms": 63.0
+    },
+    {
+      "method": "DELETE",
+      "path": "/loans/2",
+      "status": 403,
+      "elapsed_ms": 62.0
+    },
+    {
+      "method": "DELETE",
+      "path": "/loans/1",
+      "status": 403,
+      "elapsed_ms": 63.0
+    },
+    {
+      "method": "DELETE",
+      "path": "/clients/1",
+      "status": 403,
+      "elapsed_ms": 62.0
+    }
+  ],
+  "polls": [
+    {
+      "second": 2.578,
+      "loan_id": 1,
+      "status": "SUBMITTED_AND_PENDING_APPROVAL"
+    },
+    {
+      "second": 2.672,
+      "loan_id": 1,
+      "status": "SUBMITTED_AND_PENDING_APPROVAL"
+    },
+    {
+      "second": 2.937,
+      "loan_id": 1,
+      "status": "WITHDRAWN_BY_CLIENT"
+    },
+    {
+      "second": 3.187,
+      "loan_id": 2,
+      "status": "SUBMITTED_AND_PENDING_APPROVAL"
+    },
+    {
+      "second": 3.359,
+      "loan_id": 2,
+      "status": "APPROVED"
+    },
+    {
+      "second": 3.703,
+      "loan_id": 2,
+      "status": "APPROVED"
+    },
+    {
+      "second": 3.875,
+      "loan_id": 3,
+      "status": "SUBMITTED_AND_PENDING_APPROVAL"
+    },
+    {
+      "second": 4.016,
+      "loan_id": 3,
+      "status": "WITHDRAWN_BY_CLIENT"
+    },
+    {
+      "second": 4.156,
+      "loan_id": 3,
+      "status": "WITHDRAWN_BY_CLIENT"
+    },
+    {
+      "second": 4.375,
+      "loan_id": 4,
+      "status": "SUBMITTED_AND_PENDING_APPROVAL"
+    },
+    {
+      "second": 4.578,
+      "loan_id": 5,
+      "status": "SUBMITTED_AND_PENDING_APPROVAL"
+    },
+    {
+      "second": 4.734,
+      "loan_id": 4,
+      "status": "WITHDRAWN_BY_CLIENT"
+    },
+    {
+      "second": 4.797,
+      "loan_id": 5,
+      "status": "SUBMITTED_AND_PENDING_APPROVAL"
+    }
+  ],
+  "elapsed_ms": 5191.8,
+  "status": "PASS",
+  "executed_at": "2026-10-20T06:18:53.972237+00:00",
+  "fineract_image": "apache/fineract@sha256:04fb6907c8102e9e76097c514fb21d05390dd7e0e8a0e828ce86759ce61ed640",
+  "cleanup_status": "PARTIAL",
+  "live_model": false
+}
