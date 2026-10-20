@@ -1,0 +1,38 @@
+name: loanlab-fineract
+services:
+  db:
+    image: postgres@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    environment:
+      POSTGRES_USER: loanlab
+      POSTGRES_PASSWORD: ${LOANLAB_DB_PASSWORD:?Set a local test database password}
+      POSTGRES_DB: fineract_tenants
+    volumes:
+      - loanlab-db:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/01-loanlab.sql:ro
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U loanlab -d fineract_tenants']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+  fineract:
+    image: apache/fineract@sha256:04fb6907c8102e9e76097c514fb21d05390dd7e0e8a0e828ce86759ce61ed640
+    ports:
+      - '127.0.0.1:18443:8443'
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      FINERACT_NODE_ID: 1
+      FINERACT_HIKARI_DRIVER_SOURCE_CLASS_NAME: org.postgresql.Driver
+      FINERACT_HIKARI_JDBC_URL: jdbc:postgresql://db:5432/fineract_tenants
+      FINERACT_HIKARI_USERNAME: loanlab
+      FINERACT_HIKARI_PASSWORD: ${LOANLAB_DB_PASSWORD}
+      FINERACT_DEFAULT_TENANTDB_HOSTNAME: db
+      FINERACT_DEFAULT_TENANTDB_PORT: 5432
+      FINERACT_DEFAULT_TENANTDB_UID: loanlab
+      FINERACT_DEFAULT_TENANTDB_PWD: ${LOANLAB_DB_PASSWORD}
+      FINERACT_DEFAULT_TENANTDB_NAME: fineract_default
+      FINERACT_SERVER_SSL_ENABLED: 'false'
+      JAVA_TOOL_OPTIONS: '-Xmx1g'
+volumes:
+  loanlab-db:
