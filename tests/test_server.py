@@ -71,6 +71,25 @@ class ServerTests(unittest.TestCase):
             urlopen(request)
         self.assertEqual(400, caught.exception.code)
 
+    def test_business_suite_is_local_and_cannot_accept_external_target(self):
+        request = Request(self.url + "/api/business-suite", data=b"{}", headers={"Content-Type": "application/json"})
+        with urlopen(request) as response:
+            report = json.load(response)
+        self.assertEqual("PASS", report["status"])
+        self.assertEqual(4, len(report["cases"]))
+        request = Request(self.url + "/api/business-suite", data=b'{"base_url":"https://external.example"}',
+                          headers={"Content-Type": "application/json"})
+        with self.assertRaises(HTTPError) as caught:
+            urlopen(request)
+        self.assertEqual(400, caught.exception.code)
+
+    def test_curated_evidence_allowlist(self):
+        with urlopen(self.url + "/api/evidence/fineract-live") as response:
+            self.assertEqual("FINERACT_HTTP", json.load(response)["backend"])
+        with self.assertRaises(HTTPError) as caught:
+            urlopen(self.url + "/api/evidence/.env")
+        self.assertEqual(404, caught.exception.code)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -76,6 +76,16 @@ class AgentTests(unittest.TestCase):
         with self.assertRaises(ModelError):
             client.complete([], [])
 
+    def test_backend_is_replaceable_without_model_controlling_assertion(self):
+        from loanlab.business import BusinessSimulation
+        backend = BusinessSimulation(delay=2)
+        messages = [call("create_pending_loan"), call("withdraw_loan", {"loan_id": 1}),
+                    call("verify_withdrawn", {"loan_id": 1})]
+        report = run_agent("撤回贷款", backend=backend, client=client_for(messages))
+        self.assertEqual("PASS", report["status"])
+        self.assertEqual(2, report["clock_seconds"])
+        self.assertEqual("BUSINESS_SIMULATION", report["mode"])
+
 
 if __name__ == "__main__":
     unittest.main()
