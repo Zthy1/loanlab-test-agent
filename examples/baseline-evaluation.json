@@ -1,0 +1,40 @@
+{
+  "planner": "deterministic template",
+  "backend": "local simulation",
+  "live_model": false,
+  "cases": [
+    {
+      "case": "normal",
+      "expected": "PASS",
+      "actual": "PASS",
+      "matched": true
+    },
+    {
+      "case": "async",
+      "expected": "PASS",
+      "actual": "PASS",
+      "matched": true
+    },
+    {
+      "case": "false-success",
+      "expected": "FAIL",
+      "actual": "FAIL",
+      "matched": true
+    },
+    {
+      "case": "dependency-unavailable",
+      "expected": "ERROR",
+      "actual": "ERROR",
+      "matched": true
+    },
+    {
+      "case": "out-of-scope",
+      "expected": "REJECTED",
+      "actual": "REJECTED",
+      "matched": true
+    }
+  ],
+  "matched": 5,
+  "total": 5,
+  "note": "受控场景契约检查，不代表真实业务或模型泛化准确率"
+}
