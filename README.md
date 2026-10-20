@@ -4,13 +4,23 @@
 
 Python 3.12+ · 标准库运行 · DeepSeek 工具调用 · 无密钥可演示
 
-![LoanLab 工作台](docs/demo.png)
+2026-10-20 实测：真实 Fineract 四条业务回归通过；真实 DeepSeek 与 Fineract 的完整工具调用链路通过；42 项本地自动化检查通过。
+
+| 配对实验（8 条固定模拟任务，单次运行） | 模板 | DeepSeek |
+| --- | --- | --- |
+| 分类匹配数 | 6/8 | 8/8 |
+| 支持任务误拒绝数 | 2 | 0 |
+| 模型调用 | 0 | 20 |
+
+差异来自中文同义改写与英文表达；固定回归脚本仍更快、更便宜。该小样本结果不代表生产准确率。详见 [配对实测记录](examples/comparison-live.json) 与 [真实模型 + Fineract 证据](examples/live-agent-live.json)。
+
+![LoanLab 工作台](docs/evidence-demo.png)
 
 ## 解决什么问题
 
 撤回接口返回 HTTP 200，不代表贷款已撤回。LoanLab 将“提交操作”和“验证状态”分开：创建隔离贷款 → 提交撤回 → 有界轮询 → 核对同一贷款最终状态。模型选择工具，代码决定业务结果。
 
-业务参考 Apache Fineract 的贷款申请撤回流程。**当前版本使用内存模拟后端，尚未完成真实 Fineract 集成；这是个人工程项目，不是银行生产系统。** 仓库未包含 Fineract 源码。
+业务参考 Apache Fineract 的贷款申请撤回流程。网页默认使用隔离模拟后端；CLI 已对接本机真实 Fineract，四条业务规则回归通过，见 [真实运行证据](examples/fineract-live.json)。这是个人工程项目，未用于银行生产系统；仓库未包含 Fineract 源码。
 
 ## 三分钟运行
 
@@ -76,6 +86,8 @@ python -m loanlab.server --port 8768
 ```sh
 python -m unittest discover -s tests -v
 python -m loanlab.evaluate --output reports/evaluation.json
+python -m loanlab.business --output reports/business.json
+python -m loanlab.compare --output reports/comparison-offline.json
 ```
 
 测试包含状态转换、虚拟时间边界、假成功故障、依赖错误、资源越界、未知工具、重复写操作和模型提前结束。模型测试使用脚本响应替身，不消耗 API。5 个固定评测场景用于验证确定性契约，**不代表真实模型成功率或业务覆盖率**。GitHub Actions 配置为 Python 3.12 / 3.13，云端运行结果以仓库 Actions 为准。
@@ -88,9 +100,10 @@ python -m loanlab.evaluate --output reports/evaluation.json
 - `loanlab/server.py`、`loanlab/web/`：本地工作台、报告归档和下载。
 - `tests/`：自动化契约与服务测试。
 - [业务与面试说明](docs/business.md)、[项目边界与后续路线](docs/roadmap.md)。
+- [真实 Fineract 集成与数据生命周期](docs/integration.md)、[模板与模型对比方法](docs/model-evaluation.md)。
 
 ## 当前边界
 
-仅支持贷款申请撤回，不支持任意自然语言生成可执行脚本。没有真实银行数据、生产部署、权限系统或真实 Fineract 集成。服务仅监听本机，未实现登录，不应直接暴露公网。运行报告可能包含用户输入，默认不纳入 Git。发送给 DeepSeek 的任务和工具结果不要包含真实客户信息。
+支持贷款撤回与相关状态约束，不支持任意自然语言生成可执行脚本。网页执行保持模拟环境，实测快照单独展示；真实 Fineract 通过 CLI 显式运行。尚未验证多角色权限矩阵、并发竞争和大样本模型效果。没有真实银行数据或生产部署。服务仅监听本机，未实现登录，不应直接暴露公网。运行报告可能包含用户输入，默认不纳入 Git；已发布的运行证据仅含合成测试数据。发送给 DeepSeek 的任务和工具结果不要包含真实客户信息。
 
 原创代码采用 MIT；Apache Fineract 是独立的 Apache-2.0 开源项目，参考版本与出处见业务说明。
